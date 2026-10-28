@@ -1,6 +1,5 @@
 package program.equations.chain.chains.bot1.conditions;
 
-import program.equations.chain.format.DoubleFormat;
 import program.equations.chain.format.TripleFormat;
 import program.equations.chain.functions.IFunction;
 import program.equations.value.IValue;

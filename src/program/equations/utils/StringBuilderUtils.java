@@ -4,12 +4,7 @@ import program.equations.chain.chains.Div;
 import program.equations.chain.chains.Mul;
 import program.equations.chain.chains.Sub;
 import program.equations.chain.chains.Sum;
-import program.equations.chain.chains.bot1.conditions.IfElseFunc;
-import program.equations.chain.chains.bot1.conditions.NullFunc;
-import program.equations.chain.chains.bot1.logical.AndFunc;
-import program.equations.chain.chains.bot1.logical.BiggerFunc;
-import program.equations.chain.chains.bot1.logical.LowerFunc;
-import program.equations.chain.chains.bot1.logical.OrFunc;
+import program.equations.chain.chains.bot1.logic.SmartIfElseFunc;
 import program.equations.chain.chains.functions.Absolute;
 import program.equations.chain.chains.functions.Logarithm;
 import program.equations.chain.chains.functions.Pow;
@@ -401,12 +396,7 @@ public class StringBuilderUtils {
         StringBuilderUtils.addFunction(Maximal.syntax, new Maximal(null, null));
         StringBuilderUtils.addFunction(Minimal.syntax, new Minimal(null, null));
 
-        StringBuilderUtils.addFunction(NullFunc.syntax, new NullFunc());
-        StringBuilderUtils.addFunction(OrFunc.syntax, new OrFunc(null, null));
-        StringBuilderUtils.addFunction(AndFunc.syntax, new AndFunc(null, null));
-        StringBuilderUtils.addFunction(IfElseFunc.syntax, new IfElseFunc(null, null, null));
-        StringBuilderUtils.addFunction(BiggerFunc.syntax, new BiggerFunc(null, null));
-        StringBuilderUtils.addFunction(LowerFunc.syntax, new LowerFunc(null, null));
+        StringBuilderUtils.addFunction(SmartIfElseFunc.syntax, new SmartIfElseFunc(null, null, null));
 
         try {
             Configure configure = LoadPluginUtils.bootstrapPlugin(new File("plugins/"), 1);
