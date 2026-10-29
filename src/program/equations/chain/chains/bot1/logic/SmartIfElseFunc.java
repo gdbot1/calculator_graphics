@@ -1,6 +1,5 @@
 package program.equations.chain.chains.bot1.logic;
 
-import program.equations.chain.chains.bot1.logic.operator.IOperator;
 import program.equations.chain.format.TripleFormat;
 import program.equations.chain.functions.IFunction;
 import program.equations.utils.StringBuilderUtils;

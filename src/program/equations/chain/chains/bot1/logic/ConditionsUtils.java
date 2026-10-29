@@ -4,6 +4,6 @@ import program.equations.value.IValue;
 
 public class ConditionsUtils {
     public static IValue parse(String s) {
-
+        return null;
     }
 }

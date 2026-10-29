@@ -23,7 +23,7 @@ public abstract class SingleFormat implements IValue {
     public List<IValue> getArguments(String s) throws IOException {
         List<IValue> args = new ArrayList<>();
 
-        args.add(StringBuilderUtils.secondStage(s));
+        args.add(StringBuilderUtils.resolveParenthesesStage(s));
 
         return args;
     }

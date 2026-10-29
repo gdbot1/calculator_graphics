@@ -33,9 +33,9 @@ public abstract class TripleFormat implements IValue {
 
         List<IValue> args = new ArrayList<>();
 
-        args.add(StringBuilderUtils.secondStage(separated_parts.get(0)));
-        args.add(StringBuilderUtils.secondStage(separated_parts.get(1)));
-        args.add(StringBuilderUtils.secondStage(separated_parts.get(2)));
+        args.add(StringBuilderUtils.resolveParenthesesStage(separated_parts.get(0)));
+        args.add(StringBuilderUtils.resolveParenthesesStage(separated_parts.get(1)));
+        args.add(StringBuilderUtils.resolveParenthesesStage(separated_parts.get(2)));
 
         return args;
     }

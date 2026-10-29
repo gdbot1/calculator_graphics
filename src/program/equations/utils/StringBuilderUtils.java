@@ -4,6 +4,7 @@ import program.equations.chain.chains.Div;
 import program.equations.chain.chains.Mul;
 import program.equations.chain.chains.Sub;
 import program.equations.chain.chains.Sum;
+
 import program.equations.chain.chains.bot1.logic.SmartIfElseFunc;
 import program.equations.chain.chains.functions.Absolute;
 import program.equations.chain.chains.functions.Logarithm;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class StringBuilderUtils {
     protected static HashMap<String,IFunction> functions = new HashMap<>();
@@ -49,19 +51,19 @@ public class StringBuilderUtils {
             throw new IOException("Equation is empty.");
         }
 
-        return firstStage(s);
+        return prepareStage(s);
     }
 
     /**
      * 1 шаг алгоритма - это подготовка строки.
      * Функция удаляет лишние пробелы, и делает все буквы маленькими.
      */
-    public static IValue firstStage (String s) throws IOException {
+    public static IValue prepareStage (String s) throws IOException {
         if (s.isEmpty()) {
             return null;
         }
 
-        return secondStage(insertSpaces(s));
+        return resolveParenthesesStage(insertSpaces(s));
     }
 
     /**
@@ -69,7 +71,7 @@ public class StringBuilderUtils {
      * Функция учитывает функции.
      * Этап рекурсивно вызывает сам-себя для выражения в скобках.
      */
-    public static IValue secondStage (String s) throws IOException {
+    public static IValue resolveParenthesesStage (String s) throws IOException {
         int parentheses = 0, from = 0;
 
         int free_storage_index = 0;
@@ -107,7 +109,7 @@ public class StringBuilderUtils {
                 if (function != null) {
                     value = function.getChain(s_inside_of_parentheses);
                 } else {
-                    value = secondStage(s_inside_of_parentheses);
+                    value = resolveParenthesesStage(s_inside_of_parentheses);
                 }
 
                 storage.put(free_storage_index, value);
@@ -130,7 +132,61 @@ public class StringBuilderUtils {
     /**
      * Третий этап выполняет умножение и деление.
      */
+    public static IValue simpleOperatorsStage (String s, HashMap<Integer, IValue> storage, int free_storage_index, List<List<IValue>> operators_map, int operator_layer) throws IOException {
+        if (operator_layer >= operators_map.size()) {
+            //тут что-то происходит, так как больше операторов в выборке нет
+        }
+
+        List<IValue> operators = operators_map.get(operator_layer);
+
+        for (IValue operator : operators) {
+
+            for (int i = 0; i < s.length(); i++) {
+
+            }
+        }
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+
+            if (charIsABasicOperatorOfSecondDischarge(c)) {
+                String val1_s = getLeftValue(s, i), val2_s = getRightValue(s, i);
+
+                IValue val1 = getValueFromString(val1_s, storage), val2 = getValueFromString(val2_s, storage);
+
+                if (val1 == null || val2 == null) {
+                    return null;
+                }
+
+                IValue value = null;
+
+                switch (c) {
+                    case Mul.syntax -> value = new Mul(val1, val2);
+                    case Div.syntax -> value = new Div(val1, val2);
+                }
+
+                if (value == null) {
+                    throw new IOException("Unknown operation of second discharge: " + c + ".");
+                }
+
+                storage.put(free_storage_index, value);
+
+                s = insertKey(i - val1_s.length(), i + val2_s.length() + 1, free_storage_index, s);
+
+                i = 0;
+
+                free_storage_index++;
+            }
+        }
+
+        return fourthStage(s, storage, free_storage_index);
+    }
+
+    /**
+     * Третий этап выполняет умножение и деление.
+     */
     public static IValue thirdStage (String s, HashMap<Integer, IValue> storage, int free_storage_index) throws IOException {
+        System.out.println(s);
+
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
 
@@ -235,9 +291,10 @@ public class StringBuilderUtils {
 
     public static String getLeftValue(String s, int index) {
         for (int i = index - 1; i >= 0; i--) {
+            char b = i > 0 ? s.charAt(i - 1) : ' ';
             char c = s.charAt(i);
 
-            if (charIsABasicOperator(c)) {
+            if (!charIsAFloatPart(b, c)) {
                 return s.substring(i + 1, index);
             }
         }
@@ -247,14 +304,30 @@ public class StringBuilderUtils {
 
     public static String getRightValue(String s, int index) {
         for (int i = index + 1; i < s.length(); i++) {
+            char b = i > 0 ? s.charAt(i - 1) : ' ';
             char c = s.charAt(i);
 
-            if (charIsABasicOperator(c)) {
+            if (!charIsAFloatPart(b, c)) {
                 return s.substring(index + 1, i);
             }
         }
 
         return s.substring(index + 1);
+    }
+
+    public static String getFunctionNearToParentheses(String s, int index) {
+        int from = 0;
+
+        for (int i = index - 1; i >= 0; i--) {
+            char c = s.charAt(i);
+
+            if (!charIsANamePart(c)) {
+                from = i + 1;
+                break;
+            }
+        }
+
+        return s.substring(from, index);
     }
 
     public static Float getFloatFromString(String s) {
@@ -283,21 +356,6 @@ public class StringBuilderUtils {
 
     public static String insertKey (int from, int to, int id, String s) {
         return s.substring(0, from) + "<" + id + ">" + s.substring(to);
-    }
-
-    public static String getFunctionNearToParentheses(String s, int index) {
-        int from = 0;
-
-        for (int i = index; i >= 0; i--) {
-            char c = s.charAt(i);
-
-            if (charIsABasicOperator(c)) {
-                from = i + 1;
-                break;
-            }
-        }
-
-        return s.substring(from, index);
     }
 
     public static List<String> separate(String s, char separation_char) {
@@ -362,6 +420,18 @@ public class StringBuilderUtils {
 
     public static boolean charIsAFloatSeparator(char c) {
         return c == '.';
+    }
+
+    public static boolean charIsASpecial(char b, char c) {
+        return b != '\\' && (c == '<' || c == '>');
+    }
+
+    public static boolean charIsAFloatPart(char b, char c) {
+        return charIsANumber(c) || charIsAFloatSeparator(c) || charIsASpecial(b, c);
+    }
+
+    public static boolean charIsANamePart(char c) {
+        return c == '_' || Character.isLetterOrDigit(c);
     }
 
     public static void setFunctions(HashMap<String, IFunction> functions) {
