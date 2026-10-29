@@ -8,7 +8,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class SmartIfElseFunc extends TripleFormat implements IFunction {
+public class SmartIfElseFunc extends TripleFormat {
     public static final String syntax = "if";
 
     public SmartIfElseFunc(IValue val1, IValue val2, IValue val3) {
@@ -43,6 +43,11 @@ public class SmartIfElseFunc extends TripleFormat implements IFunction {
 
 
         return new SmartIfElseFunc(val1, val2, val3);
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override

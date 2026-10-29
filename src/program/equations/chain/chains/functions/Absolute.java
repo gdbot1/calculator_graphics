@@ -8,7 +8,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class Absolute extends SingleFormat implements IFunction {
+public class Absolute extends SingleFormat {
     public static final String syntax = "abs";
 
     public Absolute(IValue val) {
@@ -31,6 +31,11 @@ public class Absolute extends SingleFormat implements IFunction {
     @Override
     public IValue getChain(String s) throws IOException {
         return new Absolute(getArguments(s));
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override

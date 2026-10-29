@@ -8,7 +8,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class Sqrt extends SingleFormat implements IFunction {
+public class Sqrt extends SingleFormat {
     public static final String syntax = "sqrt";
 
     public Sqrt(IValue val) {
@@ -31,6 +31,11 @@ public class Sqrt extends SingleFormat implements IFunction {
     @Override
     public IValue getChain(String s) throws IOException {
         return new Sqrt(getArguments(s));
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override

@@ -294,7 +294,7 @@ public class StringBuilderUtils {
             char b = i > 0 ? s.charAt(i - 1) : ' ';
             char c = s.charAt(i);
 
-            if (!charIsAFloatPart(b, c)) {
+            if (!charIsAFloatPart(c) && !charIsANamePart(c) && !charIsASpecial(b, c)) {
                 return s.substring(i + 1, index);
             }
         }
@@ -307,7 +307,7 @@ public class StringBuilderUtils {
             char b = i > 0 ? s.charAt(i - 1) : ' ';
             char c = s.charAt(i);
 
-            if (!charIsAFloatPart(b, c)) {
+            if (!charIsAFloatPart(c) && !charIsANamePart(c) && !charIsASpecial(b, c)) {
                 return s.substring(index + 1, i);
             }
         }
@@ -426,8 +426,8 @@ public class StringBuilderUtils {
         return b != '\\' && (c == '<' || c == '>');
     }
 
-    public static boolean charIsAFloatPart(char b, char c) {
-        return charIsANumber(c) || charIsAFloatSeparator(c) || charIsASpecial(b, c);
+    public static boolean charIsAFloatPart(char c) {
+        return charIsANumber(c) || charIsAFloatSeparator(c);
     }
 
     public static boolean charIsANamePart(char c) {

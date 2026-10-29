@@ -3,6 +3,7 @@ package program.equations.chain.chains;
 import program.equations.chain.format.DoubleFormat;
 import program.equations.value.IValue;
 
+import java.io.IOException;
 import java.util.List;
 
 public class Sub extends DoubleFormat {
@@ -28,5 +29,10 @@ public class Sub extends DoubleFormat {
     @Override
     public String toString() {
         return "(" + val1.toString() + " " +syntax + " " +val2.toString() + ")";
+    }
+
+    @Override
+    public String getSyntax() {
+        return String.valueOf(syntax);
     }
 }

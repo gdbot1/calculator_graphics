@@ -7,7 +7,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class LowerFunc extends DoubleFormat implements IFunction {
+public class LowerFunc extends DoubleFormat {
     public static final String syntax = "<";
 
     public LowerFunc(IValue val1, IValue val2) {
@@ -30,6 +30,11 @@ public class LowerFunc extends DoubleFormat implements IFunction {
     @Override
     public IValue getChain(String s) throws IOException {
         return new LowerFunc(getArguments(s));
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override

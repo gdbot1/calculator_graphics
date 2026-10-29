@@ -1,5 +1,6 @@
 package program.equations.chain.format;
 
+import program.equations.chain.functions.IFunction;
 import program.equations.utils.StringBuilderUtils;
 import program.equations.value.IValue;
 
@@ -7,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class TripleFormat implements IValue {
+public abstract class TripleFormat extends AbstractFormat {
     public static final int count_of_arguments = 3;
 
     public IValue val1, val2, val3;
@@ -24,6 +25,7 @@ public abstract class TripleFormat implements IValue {
         this.val3 = val3;
     }
 
+    @Override
     public List<IValue> getArguments(String s) throws IOException {
         List<String> separated_parts = StringBuilderUtils.separate(s, ',');
 
@@ -38,5 +40,10 @@ public abstract class TripleFormat implements IValue {
         args.add(StringBuilderUtils.resolveParenthesesStage(separated_parts.get(2)));
 
         return args;
+    }
+
+    @Override
+    public int getCountOfArguments() {
+        return count_of_arguments;
     }
 }

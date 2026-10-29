@@ -8,7 +8,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class Cosine extends SingleFormat implements IFunction {
+public class Cosine extends SingleFormat {
     public static final String syntax = "cos";
 
     public Cosine(IValue val) {
@@ -31,6 +31,11 @@ public class Cosine extends SingleFormat implements IFunction {
     @Override
     public IValue getChain(String s) throws IOException {
         return new Cosine(getArguments(s));
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override

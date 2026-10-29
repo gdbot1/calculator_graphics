@@ -7,7 +7,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class IfElseFunc extends TripleFormat implements IFunction {
+public class IfElseFunc extends TripleFormat {
     public static final String syntax = "ifelse";
 
     public IfElseFunc(IValue val1, IValue val2, IValue val3) {
@@ -30,6 +30,11 @@ public class IfElseFunc extends TripleFormat implements IFunction {
     @Override
     public IValue getChain(String s) throws IOException {
         return new IfElseFunc(getArguments(s));
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override

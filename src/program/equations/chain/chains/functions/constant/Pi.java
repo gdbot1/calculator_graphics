@@ -4,7 +4,7 @@ import program.equations.chain.format.ZeroFormat;
 import program.equations.chain.functions.IFunction;
 import program.equations.value.IValue;
 
-public class Pi extends ZeroFormat implements IFunction {
+public class Pi extends ZeroFormat {
     public static final String syntax = "pi";
 
     @Override
@@ -20,5 +20,10 @@ public class Pi extends ZeroFormat implements IFunction {
     @Override
     public IValue getChain(String s) {
         return new Pi();
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 }

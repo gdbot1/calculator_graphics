@@ -4,7 +4,7 @@ import program.equations.chain.format.ZeroFormat;
 import program.equations.chain.functions.IFunction;
 import program.equations.value.IValue;
 
-public class E extends ZeroFormat implements IFunction {
+public class E extends ZeroFormat {
     public static final String syntax = "e";
 
     @Override
@@ -20,5 +20,10 @@ public class E extends ZeroFormat implements IFunction {
     @Override
     public IValue getChain(String s) {
         return new E();
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 }

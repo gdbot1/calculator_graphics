@@ -1,5 +1,6 @@
 package program.equations.chain.format;
 
+import program.equations.chain.functions.IFunction;
 import program.equations.utils.StringBuilderUtils;
 import program.equations.value.IValue;
 
@@ -7,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DoubleFormat implements IValue {
+public abstract class DoubleFormat extends AbstractFormat {
     public static final int count_of_arguments = 2;
 
     public IValue val1, val2;
@@ -22,6 +23,7 @@ public abstract class DoubleFormat implements IValue {
         this.val2 = val2;
     }
 
+    @Override
     public List<IValue> getArguments(String s) throws IOException {
         List<String> separated_parts = StringBuilderUtils.separate(s, ',');
 
@@ -35,5 +37,10 @@ public abstract class DoubleFormat implements IValue {
         args.add(StringBuilderUtils.resolveParenthesesStage(separated_parts.get(1)));
 
         return args;
+    }
+
+    @Override
+    public int getCountOfArguments() {
+        return count_of_arguments;
     }
 }

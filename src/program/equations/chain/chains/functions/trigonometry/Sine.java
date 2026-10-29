@@ -8,7 +8,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class Sine extends SingleFormat implements IFunction {
+public class Sine extends SingleFormat {
     public static final String syntax = "sin";
 
     public Sine(IValue val) {
@@ -31,6 +31,11 @@ public class Sine extends SingleFormat implements IFunction {
     @Override
     public IValue getChain(String s) throws IOException {
         return new Sine(getArguments(s));
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override

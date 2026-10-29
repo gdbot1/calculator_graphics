@@ -8,7 +8,7 @@ import program.equations.value.IValue;
 import java.io.IOException;
 import java.util.List;
 
-public class OrFunc extends DoubleFormat implements IFunction {
+public class OrFunc extends DoubleFormat {
     public static final String syntax = "or";
 
     public OrFunc(IValue val1, IValue val2) {
@@ -31,6 +31,11 @@ public class OrFunc extends DoubleFormat implements IFunction {
     @Override
     public IValue getChain(String s) throws IOException {
         return new OrFunc(getArguments(s));
+    }
+
+    @Override
+    public String getSyntax() {
+        return syntax;
     }
 
     @Override
