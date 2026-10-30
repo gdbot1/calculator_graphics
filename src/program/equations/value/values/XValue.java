@@ -12,11 +12,6 @@ public class XValue implements IValue {
     }
 
     @Override
-    public List<IValue> getArguments(String s) throws IOException {
-        return null;
-    }
-
-    @Override
     public String toString() {
         return "x";
     }

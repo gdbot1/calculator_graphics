@@ -1,11 +1,10 @@
 package program.equations.utils;
 
-import program.equations.chain.chains.Div;
-import program.equations.chain.chains.Mul;
-import program.equations.chain.chains.Sub;
-import program.equations.chain.chains.Sum;
+import program.equations.chain.chains.operators.Div;
+import program.equations.chain.chains.operators.Mul;
+import program.equations.chain.chains.operators.Sub;
+import program.equations.chain.chains.operators.Sum;
 
-import program.equations.chain.chains.bot1.logic.SmartIfElseFunc;
 import program.equations.chain.chains.functions.Absolute;
 import program.equations.chain.chains.functions.Logarithm;
 import program.equations.chain.chains.functions.Pow;
@@ -16,6 +15,7 @@ import program.equations.chain.chains.functions.constant.E;
 import program.equations.chain.chains.functions.constant.Pi;
 import program.equations.chain.chains.functions.trigonometry.Cosine;
 import program.equations.chain.chains.functions.trigonometry.Sine;
+import program.equations.chain.operator.IOperator;
 import program.equations.chain.functions.IFunction;
 import program.equations.value.IValue;
 import program.equations.value.values.Specific;
@@ -29,10 +29,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class StringBuilderUtils {
-    protected static HashMap<String,IFunction> functions = new HashMap<>();
+    private static final HashMap<String,IFunction> functions = new HashMap<>();
+    private static final List<List<IOperator>> operators = new ArrayList<>();
 
     /**
      * Функция выполняет парсинг строки, превращая её в последовательность действий.
@@ -47,23 +47,27 @@ public class StringBuilderUtils {
      * @throws IOException - ошибки синтаксиса в строчке / внутренние ошибки алгоритма (Если функция написана неправильно, методом отладки через ошибки можно будет устранить ошибку).
      */
     public static IValue getChain(String s) throws IOException {
+        return getChain(s, functions, operators);
+    }
+
+    public static IValue getChain(String s, HashMap<String,IFunction> functions, List<List<IOperator>> operators_map) throws IOException {
         if (s.isEmpty()) {
             throw new IOException("Equation is empty.");
         }
 
-        return prepareStage(s);
+        return prepareStage(s, functions, operators_map);
     }
 
     /**
      * 1 шаг алгоритма - это подготовка строки.
      * Функция удаляет лишние пробелы, и делает все буквы маленькими.
      */
-    public static IValue prepareStage (String s) throws IOException {
+    public static IValue prepareStage (String s, HashMap<String,IFunction> functions, List<List<IOperator>> operators_map) throws IOException {
         if (s.isEmpty()) {
             return null;
         }
 
-        return resolveParenthesesStage(insertSpaces(s));
+        return resolveParenthesesStage(removeSpaces(insertShielding(s)), functions, operators_map);
     }
 
     /**
@@ -72,6 +76,10 @@ public class StringBuilderUtils {
      * Этап рекурсивно вызывает сам-себя для выражения в скобках.
      */
     public static IValue resolveParenthesesStage (String s) throws IOException {
+        return resolveParenthesesStage(s, functions, operators);
+    }
+
+    public static IValue resolveParenthesesStage (String s, HashMap<String,IFunction> functions, List<List<IOperator>> operators_map) throws IOException {
         int parentheses = 0, from = 0;
 
         int free_storage_index = 0;
@@ -109,7 +117,7 @@ public class StringBuilderUtils {
                 if (function != null) {
                     value = function.getChain(s_inside_of_parentheses);
                 } else {
-                    value = resolveParenthesesStage(s_inside_of_parentheses);
+                    value = resolveParenthesesStage(s_inside_of_parentheses, functions, operators_map);
                 }
 
                 storage.put(free_storage_index, value);
@@ -122,145 +130,70 @@ public class StringBuilderUtils {
             }
         }
 
-        if (s.startsWith(Sub.syntax+"")) {
+        if (s.charAt(0) == '-') {
             s = "0" + s;
         }
 
-        return thirdStage(s, storage, free_storage_index);
+        return simpleOperatorsStage(s, storage, free_storage_index, operators_map, 0);
     }
 
     /**
      * Третий этап выполняет умножение и деление.
      */
-    public static IValue simpleOperatorsStage (String s, HashMap<Integer, IValue> storage, int free_storage_index, List<List<IValue>> operators_map, int operator_layer) throws IOException {
+    public static IValue simpleOperatorsStage (String s, HashMap<Integer, IValue> storage, int free_storage_index, List<List<IOperator>> operators_map, int operator_layer) throws IOException {
         if (operator_layer >= operators_map.size()) {
-            //тут что-то происходит, так как больше операторов в выборке нет
-        }
-
-        List<IValue> operators = operators_map.get(operator_layer);
-
-        for (IValue operator : operators) {
-
-            for (int i = 0; i < s.length(); i++) {
-
+            if (storage.isEmpty()) {
+                return getValueFromString(s, storage);
             }
+
+            return storage.get(free_storage_index - 1);
         }
+
+        List<IOperator> operators = operators_map.get(operator_layer);
+
         for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+            for (IOperator operator : operators) {
+                String syntax = operator.getOperator();
 
-            if (charIsABasicOperatorOfSecondDischarge(c)) {
-                String val1_s = getLeftValue(s, i), val2_s = getRightValue(s, i);
+                if (nextIsSubstring(s, i, syntax)) {
+                    String val1_s = getLeftValue(s, i), val2_s = getRightValue(s, i + syntax.length() - 1);
 
-                IValue val1 = getValueFromString(val1_s, storage), val2 = getValueFromString(val2_s, storage);
+                    IValue val1 = getValueFromString(val1_s, storage), val2 = getValueFromString(val2_s, storage);
 
-                if (val1 == null || val2 == null) {
-                    return null;
+                    if (val1 == null || val2 == null) {
+                        return null;
+                    }
+
+                    IValue value = operator.newInstance(val1, val2);
+
+                    storage.put(free_storage_index, value);
+
+                    s = insertKey(i - val1_s.length(), i + val2_s.length() + syntax.length(), free_storage_index, s);
+
+                    i = 0;
+
+                    free_storage_index++;
                 }
-
-                IValue value = null;
-
-                switch (c) {
-                    case Mul.syntax -> value = new Mul(val1, val2);
-                    case Div.syntax -> value = new Div(val1, val2);
-                }
-
-                if (value == null) {
-                    throw new IOException("Unknown operation of second discharge: " + c + ".");
-                }
-
-                storage.put(free_storage_index, value);
-
-                s = insertKey(i - val1_s.length(), i + val2_s.length() + 1, free_storage_index, s);
-
-                i = 0;
-
-                free_storage_index++;
             }
         }
 
-        return fourthStage(s, storage, free_storage_index);
+        return simpleOperatorsStage(s, storage, free_storage_index, operators_map, operator_layer + 1);
     }
 
-    /**
-     * Третий этап выполняет умножение и деление.
-     */
-    public static IValue thirdStage (String s, HashMap<Integer, IValue> storage, int free_storage_index) throws IOException {
-        System.out.println(s);
+    public static boolean nextIsSubstring(String s, int index, String substring) {
+        if (index + substring.length() > s.length()) {
+            return false;
+        }
 
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+        for (int i = 0; i < substring.length(); i++) {
+            int s_i = i + index;
 
-            if (charIsABasicOperatorOfSecondDischarge(c)) {
-                String val1_s = getLeftValue(s, i), val2_s = getRightValue(s, i);
-
-                IValue val1 = getValueFromString(val1_s, storage), val2 = getValueFromString(val2_s, storage);
-
-                if (val1 == null || val2 == null) {
-                    return null;
-                }
-
-                IValue value = null;
-
-                switch (c) {
-                    case Mul.syntax -> value = new Mul(val1, val2);
-                    case Div.syntax -> value = new Div(val1, val2);
-                }
-
-                if (value == null) {
-                    throw new IOException("Unknown operation of second discharge: " + c + ".");
-                }
-
-                storage.put(free_storage_index, value);
-
-                s = insertKey(i - val1_s.length(), i + val2_s.length() + 1, free_storage_index, s);
-
-                i = 0;
-
-                free_storage_index++;
+            if (s.charAt(s_i) != substring.charAt(i)) {
+                return false;
             }
         }
 
-        return fourthStage(s, storage, free_storage_index);
-    }
-
-    /**
-     * Четвёртый этап выполняет сложение и вычитание.
-     */
-    public static IValue fourthStage (String s, HashMap<Integer, IValue> storage, int free_storage_index) throws IOException {
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-
-            if (charIsABasicOperatorOfFirstDischarge(c)) {
-                String val1_s = getLeftValue(s, i), val2_s = getRightValue(s, i);
-
-                IValue val1 = getValueFromString(val1_s, storage), val2 = getValueFromString(val2_s, storage);
-
-                if (val1 == null || val2 == null) {
-                    return null;
-                }
-
-                IValue value = null;
-
-                switch (c) {
-                    case Sum.syntax -> value = new Sum(val1, val2);
-                    case Sub.syntax -> value = new Sub(val1, val2);
-                }
-
-                if (value == null) {
-                    throw new IOException("Unknown operation of first discharge: " + c + ".");
-                }
-
-                storage.put(free_storage_index, value);
-
-                s = insertKey(i - val1_s.length(), i + val2_s.length() + 1, free_storage_index, s);
-
-                i = 0;
-
-                free_storage_index++;
-            }
-        }
-
-        return getValueFromString(s, storage);
+        return true;
     }
 
     public static IValue getValueFromString (String s, HashMap<Integer, IValue> storage) throws IOException{
@@ -307,7 +240,7 @@ public class StringBuilderUtils {
             char b = i > 0 ? s.charAt(i - 1) : ' ';
             char c = s.charAt(i);
 
-            if (!charIsAFloatPart(c) && !charIsANamePart(c) && !charIsASpecial(b, c)) {
+            if (!charIsAFloatPart(c) && !charIsANamePart(c) && !charIsASpecial(b, c) && !(i == index + 1 && c == '-')) {
                 return s.substring(index + 1, i);
             }
         }
@@ -390,7 +323,7 @@ public class StringBuilderUtils {
         return separated_parts;
     }
 
-    public static String insertSpaces(String s) {
+    public static String removeSpaces(String s) {
         StringBuilder result = new StringBuilder();
 
         for (int i = 0; i < s.length(); i++) {
@@ -402,16 +335,20 @@ public class StringBuilderUtils {
         return result.toString().toLowerCase();
     }
 
-    public static boolean charIsABasicOperatorOfSecondDischarge(char c) {
-        return c == Mul.syntax || c == Div.syntax;
-    }
+    public static String insertShielding(String s) {
+        StringBuilder result = new StringBuilder();
 
-    public static boolean charIsABasicOperatorOfFirstDischarge(char c) {
-        return c == Sum.syntax || c == Sub.syntax;
-    }
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
 
-    public static boolean charIsABasicOperator(char c) {
-        return c == Sum.syntax || c == Sub.syntax || c == Mul.syntax || c == Div.syntax;
+            if (c == '<'|| c == '>') {
+                result.append('\\');
+            }
+
+            result.append(c);
+        }
+
+        return result.toString().toLowerCase();
     }
 
     public static boolean charIsANumber(char c) {
@@ -447,7 +384,30 @@ public class StringBuilderUtils {
         return functions.get(syntax);
     }
 
+    public static void addOperator(IOperator operator, int priority) {
+        while (priority >= operators.size()) {
+            operators.add(new ArrayList<>());
+        }
+
+        operators.get(priority).add(operator);
+    }
+
+    public static List<IOperator> getOperatorsOfPriority(int priority) {
+        if (priority >= operators.size()) {
+            return new ArrayList<>();
+        }
+
+        return operators.get(priority);
+    }
+
     public static void init () {
+        //FUNCTIONS
+        //operators
+        StringBuilderUtils.addFunction(Sum.syntax, new Sum(null, null));
+        StringBuilderUtils.addFunction(Sub.syntax, new Sub(null, null));
+        StringBuilderUtils.addFunction(Div.syntax, new Div(null, null));
+        StringBuilderUtils.addFunction(Mul.syntax, new Mul(null, null));
+
         //basic
         StringBuilderUtils.addFunction(Sqrt.syntax, new Sqrt(null));
         StringBuilderUtils.addFunction(Pow.syntax, new Pow(null, null));
@@ -466,7 +426,13 @@ public class StringBuilderUtils {
         StringBuilderUtils.addFunction(Maximal.syntax, new Maximal(null, null));
         StringBuilderUtils.addFunction(Minimal.syntax, new Minimal(null, null));
 
-        StringBuilderUtils.addFunction(SmartIfElseFunc.syntax, new SmartIfElseFunc(null, null, null));
+        operators.add(new ArrayList<>()); //1 priority
+        operators.get(0).add(new Mul(null, null));
+        operators.get(0).add(new Div(null, null));
+
+        operators.add(new ArrayList<>()); //2 priority
+        operators.get(1).add(new Sum(null, null));
+        operators.get(1).add(new Sub(null, null));
 
         try {
             Configure configure = LoadPluginUtils.bootstrapPlugin(new File("plugins/"), 1);
@@ -475,6 +441,14 @@ public class StringBuilderUtils {
                 String key = entry.getKey();
                 IFunction value = entry.getValue();
                 StringBuilderUtils.addFunction(key, value);
+            }
+
+            List<List<IOperator>> operators_map = configure.getOperators();
+
+            for (int i = 0; i < operators_map.size(); i++) {
+                for (IOperator operator : operators_map.get(i)) {
+                    StringBuilderUtils.addOperator(operator, i);
+                }
             }
         } catch (IOException | ReflectiveOperationException e) {
             throw new RuntimeException(e);

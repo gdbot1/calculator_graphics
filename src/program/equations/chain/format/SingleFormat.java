@@ -1,6 +1,5 @@
 package program.equations.chain.format;
 
-import program.equations.chain.functions.IFunction;
 import program.equations.utils.StringBuilderUtils;
 import program.equations.value.IValue;
 
